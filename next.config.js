@@ -46,7 +46,18 @@ const nextConfig = {
       ],
     })
 
-    // shader support
+    config.module.rules.push({
+      test: /\.(glb|gltf)$/,
+      use: [
+        {
+          loader: 'file-loader',
+          options: {
+            outputPath: `${isServer ? '../' : ''}static/images/`,
+          },
+        },
+      ],
+    })
+
     config.module.rules.push({
       test: /\.(glsl|vs|fs|vert|frag)$/,
       exclude: /node_modules/,
