@@ -116,15 +116,6 @@ const Pennant = forwardRef<any, any>((props, ref) => {
     position: [-halfScreenWidth, halfScreenHeight, 0.1],
   }));
 
-  // <mesh
-  //   ref={pennantRef}
-  //   castShadow
-  //   receiveShadow
-  // >
-  //   <planeGeometry args={[0.5, 1]} />
-  //   <meshBasicMaterial side={DoubleSide} map={pennantTexture} alphaMap={alphaMap} transparent />
-  // </mesh>
-
   return (
     <group>
       <mesh ref={box}>
