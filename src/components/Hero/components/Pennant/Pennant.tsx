@@ -84,10 +84,12 @@ const Pennant = forwardRef<any, any>((props, ref) => {
       let index = 0;
       for (let y = 0; y < RESOLUTIONY; y++) {
         for (let x = 0; x < RESOLUTIONX; x++) {
-          const particlePosition = particles.current[y][x].current.particle.current.position;
-          positions[index++] = particlePosition.x;
-          positions[index++] = particlePosition.y;
-          positions[index++] = particlePosition.z;
+          if (particles.current[y][x].current) {
+            const particlePosition = particles.current[y][x].current.particle.current.position;
+            positions[index++] = particlePosition.x;
+            positions[index++] = particlePosition.y;
+            positions[index++] = particlePosition.z;
+          }
         }
       }
   
@@ -96,6 +98,7 @@ const Pennant = forwardRef<any, any>((props, ref) => {
     }
   });
   
+
 
 
   const distanceX = WIDTH / RESOLUTIONX
