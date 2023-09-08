@@ -37,7 +37,12 @@ const Particle = memo(
       ref.current = { particle, api };
     }
 
-    return null
+    return (
+      <mesh ref={particle}>
+        <sphereGeometry args={[0.1, 32, 32]} />
+        <meshStandardMaterial color={'red'} />
+      </mesh>
+    )
   })
 )
 
@@ -59,7 +64,6 @@ const Pennant = forwardRef<any, any>((props, ref) => {
   const pennantTexture = useTexture(texturePng.src);
   const alphaMap = useTexture(alphaMapPng.src);
   const { viewport } = useThree();
-  const box = useRef<Mesh>(null)
   const [readyForStitches, setReadyForStitches] = useState(false)
 
   const particles = useRef(Array.from({ length: RESOLUTIONY }, () => Array.from<RefObject<Particle>, RefObject<Particle>>({ length: RESOLUTIONX }, createRef)))
@@ -68,28 +72,31 @@ const Pennant = forwardRef<any, any>((props, ref) => {
     setReadyForStitches(true)
   }, [])
 
+  const meshRef = useRef<Mesh>(null);
+
   useFrame(() => {
-    if (particles.current[0][0]) {
-      const geom = box.current.geometry;
-      const positions = geom.getAttribute('position');
-      const positionArray = positions.array;
+    const now = performance.now()
   
-      for (let vi = 0; vi < positionArray.length; vi += 3) {
-        let x = vi / 3 % RESOLUTIONX;
-        let y = Math.floor(vi / 3 / RESOLUTIONX);
-        const particle = particles.current[y][x].current?.particle.current.position;
-        
-        if (particle) {
-        positionArray[vi] = particle.x;
-        positionArray[vi + 1] = particle.y;
-        positionArray[vi + 2] = particle.z;
+    if (particles.current[0][0]) {
+      const geom = meshRef.current.geometry;
+      const positions = geom.attributes.position.array;
+  
+      let index = 0;
+      for (let y = 0; y < RESOLUTIONY; y++) {
+        for (let x = 0; x < RESOLUTIONX; x++) {
+          const particlePosition = particles.current[y][x].current.particle.current.position;
+          positions[index++] = particlePosition.x;
+          positions[index++] = particlePosition.y;
+          positions[index++] = particlePosition.z;
         }
       }
   
-      positions.needsUpdate = true;
+      geom.attributes.position.needsUpdate = true;
       geom.computeVertexNormals();
     }
   });
+  
+
 
   const distanceX = WIDTH / RESOLUTIONX
   const distanceY = HEIGHT / RESOLUTIONY
@@ -118,10 +125,11 @@ const Pennant = forwardRef<any, any>((props, ref) => {
 
   return (
     <group>
-      <mesh ref={box}>
+      <mesh ref={meshRef}>
         <planeGeometry args={[WIDTH, HEIGHT, RESOLUTIONX - 1, RESOLUTIONY - 1]} />
         <meshStandardMaterial color={'red'} side={DoubleSide} />
       </mesh>
+
       {particles.current.map((y, yi) =>
         y.map((x, xi) => (
           <Particle
