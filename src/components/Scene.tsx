@@ -1,17 +1,18 @@
 'use client'
 
-import { type FC } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { forwardRef } from 'react'
+import { Canvas, CanvasProps } from '@react-three/fiber'
 import { Preload } from '@react-three/drei'
 import { r3f } from '@/helpers/global'
 
-const Scene: FC = ({ ...props }) => {
+const Scene = forwardRef<HTMLCanvasElement, Omit<CanvasProps, 'children'>>(({ ...props }) => {
   return (
     <Canvas {...props}>
       <r3f.Out />
       <Preload all />
     </Canvas>
   )
-}
+})
+Scene.displayName = 'Scene'
 
 export default Scene

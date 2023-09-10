@@ -1,7 +1,7 @@
 import { MutableRefObject, RefObject, createRef, forwardRef, memo, useEffect, useRef, useState } from "react";
 import { useTexture } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { DoubleSide, Vector3, type Mesh, Object3D } from "three";
+import { DoubleSide, type Mesh, Object3D } from "three";
 import { type Triplet, usePlane, useSphere, useParticle, PublicApi, useDistanceConstraint } from "@react-three/cannon";
 
 import texturePng from "./assets/pennant.png";
@@ -11,9 +11,12 @@ const WIDTH = 4
 const HEIGHT = 4
 const RESOLUTIONX = 16
 const RESOLUTIONY = 16
+const distanceX = WIDTH / RESOLUTIONX
+const distanceY = HEIGHT / RESOLUTIONY
+const distanceDiagonal = Math.sqrt(distanceX * distanceX + distanceY * distanceY)
 
 type Particle = {
-  particle: React.MutableRefObject<Object3D>
+  particle: MutableRefObject<Object3D>
   api: PublicApi
 }
 
@@ -26,7 +29,7 @@ const Particle = memo(
     particle: MutableRefObject<Object3D>;
     api: PublicApi;
   }, ParticleProps>(({ mass, position }, ref) => {
-    let [particle, api] = useParticle(() => ({
+    let [particle, api] = useParticle<Mesh>(() => ({
       mass,
       position,
       // args: [0.3],
@@ -75,47 +78,24 @@ const Pennant = forwardRef<any, any>((props, ref) => {
   const meshRef = useRef<Mesh>(null);
 
   useFrame(() => {
-    const now = performance.now()
-  
     if (particles.current[0][0]) {
       const geom = meshRef.current.geometry;
       const positions = geom.attributes.position.array;
-  
-      let index = 0;
-      for (let y = 0; y < RESOLUTIONY; y++) {
-        for (let x = 0; x < RESOLUTIONX; x++) {
-          if (particles.current[y][x].current) {
-            const particlePosition = particles.current[y][x].current.particle.current.position;
-            positions[index++] = particlePosition.x;
-            positions[index++] = particlePosition.y;
-            positions[index++] = particlePosition.z;
-          }
+
+      positions.forEach((v, vi) => {
+        const x = vi % RESOLUTIONX
+        const y = Math.floor(vi / RESOLUTIONX)
+        if (particles.current[y] && particles.current[y][x].current) {
+      console.log('test1')  
+
+          geom.attributes.position.setXYZ(vi, ... particles.current[y][x].current.particle.current.position.toArray())
         }
-      }
-  
+      })
+
       geom.attributes.position.needsUpdate = true;
       geom.computeVertexNormals();
     }
   });
-  
-
-
-
-  const distanceX = WIDTH / RESOLUTIONX
-  const distanceY = HEIGHT / RESOLUTIONY
-  const distanceDiagonal = Math.sqrt(distanceX * distanceX + distanceY * distanceY)
-  const setPosition = (x = 0, y = 0, z = 0) => {
-    particles.current[0].forEach((p, i) => {
-      if (i < 2 || i > particles.current[0].length - 3)
-        p.current.api.position.set((-distanceX * RESOLUTIONX) / 2 + x + distanceX * i, y, z)
-    })
-  }
-
-  if (ref && typeof ref === 'object') {
-    ref.current = {
-      setPosition
-    };
-  }
 
   const halfScreenWidth = viewport.width / 2 - 0.4;
   const halfScreenHeight = viewport.height / 2 - 0.51;
